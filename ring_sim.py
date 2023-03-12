@@ -43,8 +43,8 @@ class Particle:
             self_vy = (self.get_vy() * (self.mass - other.mass) + 2 * other.mass * other.get_vy()) / total_mass
             other_vx = (other.get_vx() * (other.mass - self.mass) + 2 * self.mass * self.get_vx()) / total_mass
             other_vy = (other.get_vy() * (other.mass - self.mass) + 2 * self.mass * self.get_vy()) / total_mass
-            self.vx, self.vy = self_vx*0.95, self_vy*0.95
-            other.vx, other.vy = other_vx*0.95, other_vy*0.95
+            self.vx, self.vy = self_vx*0.99, self_vy*0.99
+            other.vx, other.vy = other_vx*0.99, other_vy*0.99
             overlap = 0.5 * (self.radius + other.radius - distance + 1e-6)
 
             if moveSelf:
@@ -111,8 +111,8 @@ class Ground(Obstacle):
             reflection = [other.get_vx() - 2 * dot_product * normal[0],
                           other.get_vy() - 2 * dot_product * normal[1]]
             
-            other.vx = reflection[0]
-            other.vy = reflection[1]
+            other.vx = (reflection[0] * 0.5) - (self.get_vx() * self.friction)
+            other.vy = (reflection[1] * 0.5) - (self.get_vy() * self.friction)
 
             overlap = 0.5 * (self.radius + other.radius - distance + 1e-6)
             other.x += 2 * overlap * math.cos(angle)
@@ -128,13 +128,14 @@ def create_ground_circle(centerX, centerY, distance, frequency, radius):
         angle = i * angle_increment
         # x = centerX + distance * math.cos(angle)
         # y = centerY + distance * math.sin(angle)
-        ground_circle.append(Ground(centerX, centerY, angle, distance, frequency, radius, (234, 221, 202), 0.1))
+        ground_circle.append(Ground(centerX, centerY, angle, distance, frequency, radius, (234, 221, 202), .4))
     return ground_circle
 
 
 width = 800
 height = 600
 
+ring_radius = 120
 centerX, centerY = width/2, height/2
 
 pygame.init()
@@ -142,8 +143,25 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Ring World Simulation")
 clock = pygame.time.Clock()
 
-particles = create_ground_circle(centerX,centerY, 200, -1, 7)
-particles.append(Particle(centerX, centerY, 1, -1, 2, 7, (0, 0, 255), 0.1))
+particles = create_ground_circle(centerX,centerY, ring_radius, -0.008, 8)
+
+numWater = round(len(particles)*2.5)
+max_speed = 4
+for i in range(numWater):
+    x = random.uniform(-ring_radius*0.1, ring_radius*0.1) + centerX
+    y = random.uniform(-ring_radius*0.1, ring_radius*0.1) + centerY
+    vx = random.uniform(-max_speed, max_speed)
+    vy = random.uniform(-max_speed, max_speed)
+
+    particles.append(Particle(centerX, centerY, vx, vy, 2, 5, (0, 0, 255), 0.1))
+
+for i in range(round(numWater/3)):
+    x = random.uniform(-ring_radius*0.1, ring_radius*0.1) + centerX
+    y = random.uniform(-ring_radius*0.1, ring_radius*0.1) + centerY
+    vx = random.uniform(-max_speed, max_speed)
+    vy = random.uniform(-max_speed, max_speed)
+
+    particles.append(Particle(centerX, centerY, vx, vy, 0.2, 5, (0, 220, 140), 0.1))
 
 running = True
 while running:
@@ -153,7 +171,7 @@ while running:
             running = False
 
     for particle in particles:
-        particle.update_position(1)
+        particle.update_position(2)
 
     for pIdx1, p1 in enumerate(particles):
         for pIdx2, p2 in enumerate(particles):
@@ -168,7 +186,7 @@ while running:
 
     # Update the display and tick the clock
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(80)
 
 # Quit Pygame
 pygame.quit()
