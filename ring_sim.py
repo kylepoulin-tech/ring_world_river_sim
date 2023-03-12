@@ -83,6 +83,7 @@ class Obstacle(Particle):
         self.x = self.centerX + self.mDistance * math.cos(self.mAngle)
         self.y = self.centerY + self.mDistance * math.sin(self.mAngle)
 
+
     def collide_with(self, other):
         if isinstance(other, Obstacle) or isinstance(other, Ground):
             return
@@ -94,6 +95,9 @@ class Ground(Obstacle):
     def __init__(self, x, y, angle, distance, frequency, radius, color, friction):
         super().__init__(x, y, angle, distance, frequency, radius, color, friction)
 
+    def get_normal_to_center(self):
+        return [math.cos(self.mAngle + math.pi), math.sin(self.mAngle + math.pi)]
+    
     def collide_with(self, other):
         if isinstance(other, Ground) or isinstance(other, Obstacle):
             return
@@ -102,19 +106,19 @@ class Ground(Obstacle):
         distance = math.sqrt(dx ** 2 + dy ** 2)
         if distance < (self.radius + other.radius):
             angle = math.atan2(dy, dx)
-            grndVx, grndVy = self.get_vx(), self.get_vy()
-            magnitudeVelocity = math.hypot(grndVx, grndVy)
-            grndVx /= magnitudeVelocity
-            grndVy /= magnitudeVelocity
-
-            dot_product = other.vx * grndVx + other.vy * grndVy
-            other.vx = other.vx - 2 * dot_product * grndVx
-            other.vy = other.vy - 2 * dot_product * grndVy
+            normal = self.get_normal_to_center()
+            dot_product = other.get_vx() * normal[0] + other.get_vy() * normal[1]
+            reflection = [other.get_vx() - 2 * dot_product * normal[0],
+                          other.get_vy() - 2 * dot_product * normal[1]]
+            
+            other.vx = reflection[0]
+            other.vy = reflection[1]
 
             overlap = 0.5 * (self.radius + other.radius - distance + 1e-6)
             other.x += 2 * overlap * math.cos(angle)
             other.y += 2 * overlap * math.sin(angle)
 
+    
 def create_ground_circle(centerX, centerY, distance, frequency, radius):
     circumference = 2 * math.pi * distance
     ground_count = int(circumference / (2 * radius))
