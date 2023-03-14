@@ -8,6 +8,7 @@ height = 600
 
 ring_radius = 100
 centerX, centerY = width/2, height/2
+dam_collides = True
 
 class Particle:
     def __init__(self, x, y, vx, vy, mass, radius, color, friction, frequency):
@@ -111,7 +112,7 @@ class Obstacle(Particle):
 
 
     def collide_with(self, other):
-        if isinstance(other, Obstacle):
+        if isinstance(other, Obstacle) or not dam_collides:
             return
         super().collide_with(other, False)
         self.vx, self.vy = 0, 0
@@ -132,7 +133,7 @@ pygame.display.set_caption("Ring World Simulation")
 clock = pygame.time.Clock()
 
 
-numWater = 150
+numWater = 200
 max_speed = 4
 frequency = -0.005
 particle_size = 3.5
@@ -145,7 +146,7 @@ for i in range(numWater):
 
     particles.append(Particle(centerX, centerY, vx, vy, 2, particle_size, (0, 0, 255), 0.4, frequency))
 
-for i in range(round(numWater/4)):
+for i in range(round(numWater/5)):
     x = random.uniform(-ring_radius*0.1, ring_radius*0.1) + centerX
     y = random.uniform(-ring_radius*0.1, ring_radius*0.1) + centerY
     vx = random.uniform(-max_speed, max_speed)
@@ -159,6 +160,8 @@ particles.append(Obstacle(centerX, centerY, 0.5*math.pi, ring_radius - 3*(2*part
 particles.append(Obstacle(centerX, centerY, 0.5*math.pi, ring_radius - 4*(2*particle_size), frequency, particle_size, (234,221,202), 0))
 particles.append(Obstacle(centerX, centerY, 0.5*math.pi, ring_radius - 5*(2*particle_size), frequency, particle_size, (234,221,202), 0))
 particles.append(Obstacle(centerX, centerY, 0.5*math.pi, ring_radius - 6*(2*particle_size), frequency, particle_size, (234,221,202), 0))
+particles.append(Obstacle(centerX, centerY, 0.5*math.pi, ring_radius - 7*(2*particle_size), frequency, particle_size, (234,221,202), 0))
+particles.append(Obstacle(centerX, centerY, 0.5*math.pi, ring_radius - 8*(2*particle_size), frequency, particle_size, (234,221,202), 0))
 
 dam_perspective = True
 running = True
@@ -169,6 +172,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            dam_collides = not dam_collides
 
     for particle in particles:
         particle.update_position(dt)
